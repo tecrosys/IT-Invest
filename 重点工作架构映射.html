@@ -1,0 +1,2482 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IT投资规划架构映射 - Standalone</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --muted: #64748b;
+      --text: #0f172a;
+      --line: #cbd5e1;
+      --line-active: #2563eb;
+      --border: #e2e8f0;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --slate-soft: #f1f5f9;
+      --green: #059669;
+      --green-soft: #d1fae5;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --orange: #ea580c;
+      --orange-soft: #ffedd5;
+      --indigo: #4f46e5;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+      --shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    html { font-size: 90%; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 18px;
+    }
+
+    .workspace-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(255,255,255,.82);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 50;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 36px; height: 36px; border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700;
+    }
+    .brand h1 { margin: 0; font-size: 20px; }
+
+    .top-actions {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+    .icon-btn, .pill-btn, .text-btn {
+      border: 1px solid var(--border);
+      background: white;
+      color: #334155;
+      border-radius: 12px;
+      transition: .18s ease;
+    }
+    .icon-btn {
+      width: 40px; height: 40px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 17px;
+    }
+    .pill-btn {
+      padding: 10px 14px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .pill-btn.active {
+      background: var(--amber-soft);
+      border-color: #fbbf24;
+      color: #92400e;
+    }
+    .icon-btn:hover, .pill-btn:hover, .text-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .text-btn { padding: 9px 14px; }
+
+    .legend {
+      display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+      font-size: 12px; color: var(--muted);
+      padding-right: 8px; border-right: 1px solid var(--border);
+      margin-right: 6px;
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+    .dot.red { background: #f87171; }
+    .dot.orange { background: #fdba74; }
+    .dot.dashed { border: 1px dashed #94a3b8; background: transparent; }
+
+    .edit-banner {
+      position: sticky; top: 0; z-index: 40;
+      padding: 10px 20px;
+      background: #fffbeb;
+      color: #92400e;
+      border-bottom: 1px solid #fde68a;
+      display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      font-size: 14px;
+    }
+    .edit-banner .status {
+      background: #fde68a; color: #78350f; padding: 4px 10px; border-radius: 999px; font-weight: 700;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .canvas {
+      position: relative;
+      min-width: 1100px;
+      min-height: calc(100vh - 140px);
+      width: 100%;
+      z-index: 2;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 28%) minmax(0, 1fr);
+      gap: 20px;
+      position: relative;
+      z-index: 3;
+      align-content: start;
+    }
+
+    .col, .section-panel {
+      background: rgba(241,245,249,.62);
+      border: 1px solid rgba(226,232,240,.9);
+      border-radius: 20px;
+      padding: 16px;
+      position: relative;
+      z-index: 3;
+    }
+
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      margin-bottom: 14px; position: relative; z-index: 5;
+    }
+    .section-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 18px; font-weight: 800; margin: 0;
+    }
+    .section-title .bar {
+      width: 6px; height: 24px; border-radius: 999px; background: var(--blue);
+    }
+    .section-title .bar.slate { background: #64748b; }
+    .section-title .bar.indigo { background: var(--indigo); }
+
+    .list, .stack { display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 5; }
+    .initiative-list { gap: 12px; }
+    .initiative-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      z-index: 6;
+    }
+    .initiative-measures {
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(191,219,254,.85);
+      border-radius: 16px;
+      padding: 8px 10px 10px;
+      margin-left: 14px;
+    }
+    .initiative-measures-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 2px 0 6px;
+    }
+    .initiative-measures-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+    }
+    .initiative-measures-count {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .initiative-measures-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .measure-node {
+      background: #f8fbff;
+      border-color: #c7d2fe;
+      padding: 8px 10px;
+    }
+    .measure-node .node-title { font-size: 14px; font-weight: 700; }
+    .measure-node .node-subtitle { font-size: 12px; }
+
+    .right-col { display: flex; flex-direction: column; gap: 20px; }
+    .value-stream-panel {
+      padding-bottom: 12px;
+    }
+    .value-stream-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 2px 2px 6px;
+      scroll-behavior: smooth;
+    }
+    .value-stream-row::-webkit-scrollbar {
+      height: 8px;
+    }
+    .value-stream-row::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
+    .value-stream-node {
+      min-width: max-content;
+      max-width: none;
+      width: max-content;
+      flex: 0 0 auto;
+      border-color: #fcd34d;
+      background: linear-gradient(180deg, #fffdf5 0%, #ffffff 100%);
+      padding: 8px 10px;
+    }
+    .value-stream-node .node-title {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      word-break: keep-all;
+    }
+    .value-stream-node .node-main {
+      gap: 2px;
+    }
+
+    .group-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      align-items: start;
+      position: relative; z-index: 5;
+    }
+
+    .group-card {
+      background: rgba(255,255,255,.76);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 10px;
+      position: relative; z-index: 6;
+    }
+    .group-head {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      padding: 6px 8px; border-radius: 10px;
+      cursor: pointer; user-select: none;
+    }
+    .group-head:hover { background: #f8fafc; }
+    .group-name { font-size: 15px; font-weight: 700; color: #334155; }
+    .group-head-right { display: inline-flex; align-items: center; gap: 8px; }
+    .group-meta {
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      white-space: nowrap;
+    }
+    .group-actions, .card-actions { display: flex; gap: 4px; }
+    .mini-icon {
+      width: 28px; height: 28px; border: 0; background: transparent; border-radius: 8px;
+      color: #64748b; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .mini-icon:hover { background: #eef2ff; color: var(--blue); }
+    .mini-icon.danger:hover { background: #fee2e2; color: var(--red); }
+
+    .cap-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding-left: 0; border-left: none; }
+
+    .it-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr);
+      gap: 16px;
+      position: relative; z-index: 5;
+      align-items: start;
+    }
+    .it-subsection {
+      background: rgba(255,255,255,.55);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      position: relative; z-index: 6;
+      min-width: 0;
+    }
+    .it-card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      align-items: start;
+    }
+    .it-card-grid.products-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .it-card-grid.projects-grid {
+      grid-template-columns: 1fr;
+    }
+    .section-header-tools {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-summary {
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      white-space: nowrap;
+    }
+    .subhead-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .subhead { font-weight: 800; margin: 0; color: #334155; }
+    .sub-summary {
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      white-space: nowrap;
+    }
+
+    .node {
+      position: relative;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 1px 2px rgba(15,23,42,.03);
+      transition: .16s ease;
+      z-index: 8;
+    }
+    .initiative-node {
+      min-height: 88px;
+      padding: 14px 14px 12px;
+    }
+    .capability-node,
+    .it-node {
+      padding: 8px 10px;
+    }
+    .node:hover { box-shadow: 0 8px 24px rgba(15,23,42,.08); }
+    .node.dimmed { opacity: .48; filter: grayscale(.2); }
+    .node.active {
+      border-color: #93c5fd;
+      box-shadow: 0 8px 24px rgba(37,99,235,.12);
+    }
+    .node.active .node-title,
+    .node.active .node-subtitle { color: var(--blue); font-weight: 700; }
+    .node.source {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.14), 0 10px 26px rgba(37,99,235,.12);
+    }
+    .node.warning-red { border-color: #fca5a5; background: #fff5f5; }
+    .node.warning-orange { border-color: #fdba74; background: #fff7ed; }
+    .node.unused { opacity: .62; border-style: dashed; }
+
+    .initiative-node { border-color: #bfdbfe; cursor: pointer; }
+    .capability-node { border-color: #cbd5e1; }
+    .it-node { border-color: #c7d2fe; }
+
+    .node-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .capability-node .node-top,
+    .it-node .node-top { gap: 8px; }
+    .node-main { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .capability-node .node-main,
+    .it-node .node-main { gap: 2px; }
+    .node-title-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .node-title {
+      color: #1e293b;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .initiative-node .node-title { font-size: 17px; font-weight: 800; line-height: 1.45; }
+    .capability-node .node-title,
+    .it-node .node-title { font-size: 14px; font-weight: 500; }
+    .capability-node.involved .node-title { font-weight: 800; color: #0f172a; }
+    .capability-node.unused .node-title { font-weight: 400; color: #64748b; }
+    .capability-node.involved.active .node-title,
+    .capability-node.involved.active .node-subtitle,
+    .capability-node.involved.source .node-title,
+    .capability-node.involved.source .node-subtitle { color: var(--blue); }
+    .node-subtitle { font-size: 12px; color: #64748b; line-height: 1.35; }
+    .initiative-node .node-subtitle { font-size: 13px; line-height: 1.5; }
+
+    .seq-tag {
+      flex: none;
+      min-width: 28px; height: 28px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-weight: 800;
+      font-size: 13px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    .meta-row {
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end;
+      flex: none;
+    }
+    .status-pill {
+      font-size: 10px; font-weight: 800; letter-spacing: .02em;
+      border-radius: 999px; padding: 3px 7px;
+      white-space: nowrap;
+    }
+    .status-blue { background: #dbeafe; color: #1d4ed8; }
+    .status-green { background: #d1fae5; color: #047857; }
+    .status-slate { background: #e2e8f0; color: #475569; }
+    .status-indigo { background: #e0e7ff; color: #4338ca; }
+    .warn-icon { font-size: 14px; line-height: 1; }
+    .warn-icon.red { color: var(--red); }
+    .warn-icon.orange { color: var(--orange); }
+
+    .node-footer {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex: none;
+      border-top: none;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .anchor {
+      position: absolute;
+      width: 12px; height: 12px;
+      border-radius: 999px;
+      border: 2px solid var(--blue);
+      background: white;
+      opacity: 0;
+      transform: scale(.78);
+      transition: opacity .12s ease, transform .12s ease, box-shadow .12s ease;
+      z-index: 12;
+      pointer-events: none;
+    }
+    .node.show-anchors .anchor,
+    .anchor.visible,
+    .node.drag-related .anchor { opacity: 1; pointer-events: auto; }
+    .anchor-top.visible, .node.show-anchors .anchor-top, .node.drag-related .anchor-top { transform: translate(-50%, -50%) scale(1); }
+    .anchor-right.visible, .node.show-anchors .anchor-right, .node.drag-related .anchor-right { transform: translate(50%, -50%) scale(1); }
+    .anchor-bottom.visible, .node.show-anchors .anchor-bottom, .node.drag-related .anchor-bottom { transform: translate(-50%, 50%) scale(1); }
+    .anchor-left.visible, .node.show-anchors .anchor-left, .node.drag-related .anchor-left { transform: translate(-50%, -50%) scale(1); }
+    .anchor:hover, .anchor.active-target, .anchor.source-anchor {
+      box-shadow: 0 0 0 4px rgba(37,99,235,.14);
+      background: #eff6ff;
+    }
+    .anchor-top:hover, .anchor-top.active-target, .anchor-top.source-anchor { transform: translate(-50%, -50%) scale(1.12); }
+    .anchor-right:hover, .anchor-right.active-target, .anchor-right.source-anchor { transform: translate(50%, -50%) scale(1.12); }
+    .anchor-bottom:hover, .anchor-bottom.active-target, .anchor-bottom.source-anchor { transform: translate(-50%, 50%) scale(1.12); }
+    .anchor-left:hover, .anchor-left.active-target, .anchor-left.source-anchor { transform: translate(-50%, -50%) scale(1.12); }
+    .anchor-top { left: 50%; top: 0; transform: translate(-50%, -50%) scale(.78); }
+    .anchor-right { right: 0; top: 50%; transform: translate(50%, -50%) scale(.78); }
+    .anchor-bottom { left: 50%; bottom: 0; transform: translate(-50%, 50%) scale(.78); }
+    .anchor-left { left: 0; top: 50%; transform: translate(-50%, -50%) scale(.78); }
+
+    svg.lines-bottom,
+    svg.line-hit,
+    svg.lines-top {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    svg.lines-bottom { z-index: 1; pointer-events: none; }
+    svg.line-hit { z-index: 4; pointer-events: none; }
+    svg.lines-top { z-index: 20; pointer-events: none; }
+
+    .line-base {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 1.8;
+      opacity: 1;
+      transition: opacity .16s ease, stroke-width .16s ease, stroke .16s ease;
+    }
+    .line-base.dimmed {
+      opacity: .18;
+    }
+    .line-active {
+      fill: none;
+      stroke: var(--line-active);
+      stroke-width: 3.2;
+      filter: drop-shadow(0 2px 6px rgba(37,99,235,.18));
+    }
+    .line-dot { fill: white; stroke: var(--line-active); stroke-width: 2; }
+    .line-preview {
+      fill: none;
+      stroke: var(--line-active);
+      stroke-width: 2.6;
+      stroke-dasharray: 7 7;
+    }
+    .line-hit-path {
+      fill: none;
+      stroke: transparent;
+      stroke-width: 16;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(15,23,42,.5);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      width: min(100%, 460px);
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(15,23,42,.22);
+    }
+    .modal-head, .modal-foot {
+      padding: 16px 20px;
+      background: #f8fafc;
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .modal-foot { border-top: 1px solid #e2e8f0; border-bottom: none; justify-content: flex-end; }
+    .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 13px; color: #334155; font-weight: 700; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px 12px;
+      outline: none;
+      background: white;
+    }
+    .field textarea { resize: vertical; min-height: 88px; }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(96,165,250,.18);
+    }
+
+    .empty {
+      padding: 22px 14px;
+      text-align: center;
+      color: #94a3b8;
+      border: 1px dashed #cbd5e1;
+      border-radius: 14px;
+      background: rgba(255,255,255,.65);
+      font-size: 13px;
+    }
+
+    .assistant-fab {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 110;
+      width: 56px;
+      height: 56px;
+      border: 0;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 22%, #60a5fa 0%, #2563eb 45%, #312e81 100%);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 16px 36px rgba(37, 99, 235, .32);
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+    .assistant-fab-icon {
+      width: 28px;
+      height: 28px;
+      display: block;
+      filter: drop-shadow(0 1px 4px rgba(15, 23, 42, .2));
+    }
+    .assistant-fab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(37, 99, 235, .38);
+    }
+
+    .assistant-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 115;
+      background: rgba(15, 23, 42, .4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    .assistant-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .assistant-dialog {
+      position: fixed;
+      right: 12px;
+      top: 12px;
+      z-index: 116;
+      width: min(460px, calc(100vw - 24px));
+      height: calc(100vh - 24px);
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, .22);
+      transform: translateX(22px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .24s ease, opacity .24s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .assistant-dialog.open {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .assistant-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #f8fafc;
+    }
+    .assistant-head h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .assistant-head-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .assistant-chat-body {
+      flex: 1;
+      overflow: auto;
+      padding: 14px 16px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-bubble {
+      max-width: 86%;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .chat-bubble.assistant {
+      background: white;
+      border: 1px solid #e2e8f0;
+      color: #0f172a;
+      align-self: flex-start;
+    }
+    .chat-bubble.user {
+      background: #dbeafe;
+      border: 1px solid #93c5fd;
+      color: #1e3a8a;
+      align-self: flex-end;
+    }
+    .assistant-chat-input {
+      border-top: 1px solid #e2e8f0;
+      padding: 12px 14px;
+      display: flex;
+      gap: 8px;
+      background: white;
+    }
+    .assistant-chat-input input {
+      flex: 1;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 10px 12px;
+      outline: none;
+    }
+    .assistant-chat-input input:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(96,165,250,.18);
+    }
+
+    .assistant-settings-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 126;
+      background: rgba(15, 23, 42, .35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    .assistant-settings-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .assistant-settings-modal {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 127;
+      width: min(96vw, 760px);
+      max-height: min(86vh, 760px);
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, .22);
+      transform: translate(-50%, -46%) scale(.96);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .22s ease, opacity .22s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .assistant-settings-modal.open {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .assistant-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      background: white;
+    }
+    .assistant-tab {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      background: white;
+      color: #334155;
+      padding: 8px 10px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .assistant-tab.active {
+      border-color: #93c5fd;
+      color: #1d4ed8;
+      background: #eff6ff;
+    }
+    .assistant-body {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+    }
+    .assistant-section {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .assistant-section.active {
+      display: flex;
+    }
+    .hint {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+    .prompt-layout {
+      display: grid;
+      grid-template-columns: minmax(160px, 38%) minmax(0, 1fr);
+      gap: 10px;
+      min-height: 320px;
+    }
+    .prompt-list {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: auto;
+      background: #f8fafc;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .prompt-item {
+      border: 0;
+      background: transparent;
+      text-align: left;
+      border-radius: 8px;
+      padding: 8px;
+      color: #334155;
+      font-size: 13px;
+    }
+    .prompt-item.active {
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+    .assistant-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .assistant-json {
+      width: 100%;
+      min-height: 180px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      background: #f8fafc;
+      padding: 10px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      color: #0f172a;
+      resize: vertical;
+    }
+
+    .sr-only { position: absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip: rect(0,0,0,0); white-space: nowrap; border:0; }
+
+    @media (max-width: 1100px) {
+      .app { padding: 12px; }
+      .topbar { align-items: flex-start; }
+      .legend { display: none; }
+      .grid { grid-template-columns: 1fr; }
+      .it-grid { grid-template-columns: 1fr; }
+      .it-card-grid.products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .it-card-grid.projects-grid { grid-template-columns: 1fr; }
+      .canvas { min-width: 900px; }
+      .prompt-layout { grid-template-columns: 1fr; }
+      .assistant-dialog {
+        right: 0;
+        top: 0;
+        width: min(96vw, 420px);
+        height: 100vh;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="workspace-panel">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-icon">⚙</div>
+          <h1>IT投资规划架构映射</h1>
+        </div>
+        <div class="top-actions">
+          <div class="legend">
+            <span class="legend-item"><span class="dot red"></span>孤立IT项</span>
+            <span class="legend-item"><span class="dot orange"></span>能力断层</span>
+            <span class="legend-item"><span class="dot dashed"></span>未涉及能力</span>
+          </div>
+          <button class="icon-btn" id="importBtn" title="导入 JSON">⤴</button>
+          <button class="icon-btn" id="exportBtn" title="导出 JSON">💾</button>
+          <button class="pill-btn" id="editModeBtn">✎ <span>进入编辑</span></button>
+          <input id="importInput" type="file" accept=".json,application/json" class="sr-only" />
+        </div>
+      </header>
+
+      <div class="edit-banner" id="editBanner" style="display:none;">
+        <div>编辑模式：悬停卡片显示四边锚点；拖动锚点创建连线；点击连线可删除；卡片按钮可继续编辑。</div>
+        <div class="status" id="linkStatus" style="display:none;">正在连线…</div>
+      </div>
+
+      <main class="canvas-wrap" id="canvasWrap">
+        <div class="canvas" id="canvas">
+          <svg class="lines-bottom" id="linesBottom"></svg>
+          <svg class="line-hit" id="lineHit"></svg>
+          <div class="grid" id="board"></div>
+          <svg class="lines-top" id="linesTop"></svg>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <strong id="modalTitle">编辑</strong>
+        <button class="mini-icon" id="closeModalBtn" title="关闭">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-foot">
+        <button class="text-btn" id="cancelModalBtn">取消</button>
+        <button class="pill-btn" id="saveModalBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="assistant-fab" id="assistantFab" type="button" title="智能助手" aria-label="智能助手">
+    <span class="sr-only">智能助手</span>
+    <svg class="assistant-fab-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <linearGradient id="aiOrbGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#c4b5fd"></stop>
+          <stop offset="55%" stop-color="#bfdbfe"></stop>
+          <stop offset="100%" stop-color="#f0f9ff"></stop>
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="12" r="8" fill="none" stroke="url(#aiOrbGradient)" stroke-width="1.7"></circle>
+      <circle cx="12" cy="12" r="2.5" fill="url(#aiOrbGradient)"></circle>
+      <circle cx="12" cy="4" r="1.35" fill="#bfdbfe"></circle>
+      <circle cx="19" cy="8" r="1.35" fill="#bfdbfe"></circle>
+      <circle cx="19" cy="16" r="1.35" fill="#bfdbfe"></circle>
+      <circle cx="12" cy="20" r="1.35" fill="#bfdbfe"></circle>
+      <circle cx="5" cy="16" r="1.35" fill="#bfdbfe"></circle>
+      <circle cx="5" cy="8" r="1.35" fill="#bfdbfe"></circle>
+      <path d="M12 5.4 L12 9.5 M17.2 8.4 L14.2 10.1 M17.2 15.6 L14.2 13.9 M12 18.6 L12 14.5 M6.8 15.6 L9.8 13.9 M6.8 8.4 L9.8 10.1" stroke="#bfdbfe" stroke-width="1.2" stroke-linecap="round"></path>
+    </svg>
+  </button>
+
+  <div class="assistant-backdrop" id="assistantBackdrop"></div>
+  <div class="assistant-dialog" id="assistantDialog" aria-label="智能投资决策助手对话框">
+    <div class="assistant-head">
+      <h3>智能投资决策助手</h3>
+      <div class="assistant-head-actions">
+        <button class="mini-icon" id="assistantSettingsBtn" title="配置">⚙</button>
+        <button class="mini-icon" id="assistantCloseBtn" title="关闭">✕</button>
+      </div>
+    </div>
+    <div class="assistant-chat-body" id="assistantChatLog"></div>
+    <div class="assistant-chat-input">
+      <input id="assistantChatInput" placeholder="输入你的问题，例如：请给出预算优化建议" />
+      <button class="pill-btn" id="assistantSendBtn" type="button">发送</button>
+    </div>
+  </div>
+
+  <div class="assistant-settings-backdrop" id="assistantSettingsBackdrop"></div>
+  <div class="assistant-settings-modal" id="assistantSettingsModal" aria-label="智能助手配置">
+    <div class="assistant-head">
+      <h3>智能助手配置</h3>
+      <button class="mini-icon" id="assistantSettingsCloseBtn" title="关闭">✕</button>
+    </div>
+    <div class="assistant-tabs" id="assistantTabs">
+      <button class="assistant-tab" data-assistant-tab="api" type="button">API配置</button>
+      <button class="assistant-tab" data-assistant-tab="prompts" type="button">Prompt管理</button>
+      <button class="assistant-tab" data-assistant-tab="ontology" type="button">本体JSON</button>
+    </div>
+    <div class="assistant-body">
+      <section class="assistant-section" data-assistant-section="api">
+        <div class="field"><label>服务商</label><input id="aiProviderInput" placeholder="OpenAI兼容 / Azure OpenAI / 其他" /></div>
+        <div class="field"><label>Base URL</label><input id="aiBaseUrlInput" placeholder="https://api.openai.com/v1" /></div>
+        <div class="field"><label>API Key</label><input id="aiApiKeyInput" type="password" placeholder="sk-***" /></div>
+        <div class="field"><label>模型</label><input id="aiModelInput" placeholder="gpt-4.1 / deepseek-chat 等" /></div>
+        <div class="field"><label>Temperature</label><input id="aiTempInput" type="number" min="0" max="2" step="0.1" /></div>
+        <div class="assistant-actions"><button class="pill-btn" id="saveApiConfigBtn" type="button">保存API配置</button></div>
+        <div class="hint">配置将保存在当前浏览器本地存储，不会自动上传。</div>
+      </section>
+
+      <section class="assistant-section" data-assistant-section="prompts">
+        <div class="prompt-layout">
+          <div class="prompt-list" id="promptList"></div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div class="field"><label>Prompt名称</label><input id="promptTitleInput" placeholder="例如：年度预算评审助手" /></div>
+            <div class="field"><label>Prompt内容</label><textarea id="promptContentInput" placeholder="输入系统提示词或业务模板"></textarea></div>
+            <div class="assistant-actions">
+              <button class="text-btn" id="newPromptBtn" type="button">新建</button>
+              <button class="pill-btn" id="savePromptBtn" type="button">保存</button>
+              <button class="text-btn" id="deletePromptBtn" type="button">删除</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="assistant-section" data-assistant-section="ontology">
+        <div class="assistant-actions">
+          <button class="pill-btn" id="pickOntologyBtn" type="button">选择并导入JSON</button>
+          <button class="text-btn" id="clearOntologyBtn" type="button">清空</button>
+        </div>
+        <input id="ontologyInput" type="file" accept=".json,application/json" class="sr-only" />
+        <div class="hint" id="ontologySummary">尚未导入本体JSON。</div>
+        <textarea class="assistant-json" id="ontologyPreview" readonly placeholder="导入后显示JSON预览"></textarea>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const INITIAL_DATA = {
+        initiatives: [],
+        valueStreams: [],
+        capabilityGroups: [],
+        itProjects: [],
+        links: [],
+      };
+
+      const state = {
+        data: JSON.parse(JSON.stringify(INITIAL_DATA)),
+        isEditMode: false,
+        linkingSource: null,
+        hoveredNode: null,
+        hoveredLinkId: null,
+        dragLink: null,
+        expandedGroups: {},
+        expandedInitiatives: {},
+        nodePositions: {},
+        anchorPositions: {},
+        canvasSize: { width: 1200, height: 800 },
+        modal: { open: false, type: '', item: null, groupId: null },
+        assistant: {
+          open: false,
+          settingsOpen: false,
+          activeTab: 'api',
+          config: { provider: '', baseUrl: '', apiKey: '', model: '', temperature: 0.2 },
+          prompts: [],
+          activePromptId: null,
+          ontology: null,
+          ontologyFileName: '',
+          messages: [],
+        },
+      };
+
+      const els = {
+        board: document.getElementById('board'),
+        canvas: document.getElementById('canvas'),
+        canvasWrap: document.getElementById('canvasWrap'),
+        linesBottom: document.getElementById('linesBottom'),
+        lineHit: document.getElementById('lineHit'),
+        linesTop: document.getElementById('linesTop'),
+        editModeBtn: document.getElementById('editModeBtn'),
+        editBanner: document.getElementById('editBanner'),
+        linkStatus: document.getElementById('linkStatus'),
+        importBtn: document.getElementById('importBtn'),
+        exportBtn: document.getElementById('exportBtn'),
+        importInput: document.getElementById('importInput'),
+        modalBackdrop: document.getElementById('modalBackdrop'),
+        modalTitle: document.getElementById('modalTitle'),
+        modalBody: document.getElementById('modalBody'),
+        closeModalBtn: document.getElementById('closeModalBtn'),
+        cancelModalBtn: document.getElementById('cancelModalBtn'),
+        saveModalBtn: document.getElementById('saveModalBtn'),
+        assistantFab: document.getElementById('assistantFab'),
+        assistantBackdrop: document.getElementById('assistantBackdrop'),
+        assistantDialog: document.getElementById('assistantDialog'),
+        assistantCloseBtn: document.getElementById('assistantCloseBtn'),
+        assistantSettingsBtn: document.getElementById('assistantSettingsBtn'),
+        assistantChatLog: document.getElementById('assistantChatLog'),
+        assistantChatInput: document.getElementById('assistantChatInput'),
+        assistantSendBtn: document.getElementById('assistantSendBtn'),
+        assistantSettingsBackdrop: document.getElementById('assistantSettingsBackdrop'),
+        assistantSettingsModal: document.getElementById('assistantSettingsModal'),
+        assistantSettingsCloseBtn: document.getElementById('assistantSettingsCloseBtn'),
+        assistantTabs: document.getElementById('assistantTabs'),
+        aiProviderInput: document.getElementById('aiProviderInput'),
+        aiBaseUrlInput: document.getElementById('aiBaseUrlInput'),
+        aiApiKeyInput: document.getElementById('aiApiKeyInput'),
+        aiModelInput: document.getElementById('aiModelInput'),
+        aiTempInput: document.getElementById('aiTempInput'),
+        saveApiConfigBtn: document.getElementById('saveApiConfigBtn'),
+        promptList: document.getElementById('promptList'),
+        promptTitleInput: document.getElementById('promptTitleInput'),
+        promptContentInput: document.getElementById('promptContentInput'),
+        newPromptBtn: document.getElementById('newPromptBtn'),
+        savePromptBtn: document.getElementById('savePromptBtn'),
+        deletePromptBtn: document.getElementById('deletePromptBtn'),
+        pickOntologyBtn: document.getElementById('pickOntologyBtn'),
+        ontologyInput: document.getElementById('ontologyInput'),
+        clearOntologyBtn: document.getElementById('clearOntologyBtn'),
+        ontologySummary: document.getElementById('ontologySummary'),
+        ontologyPreview: document.getElementById('ontologyPreview'),
+      };
+
+      const generateId = () => Math.random().toString(36).slice(2, 11);
+      const clone = (v) => JSON.parse(JSON.stringify(v));
+      const ALL_ANCHORS = ['top', 'right', 'bottom', 'left'];
+      const ASSISTANT_STORAGE_KEY = 'it_planner_ai_assistant_v1';
+
+      function defaultPrompt() {
+        return {
+          id: generateId(),
+          title: '投资评审基础Prompt',
+          content: '你是企业IT投资治理顾问，请基于导入的架构本体和预算信息，输出优先级建议、风险点和落地路径。',
+        };
+      }
+
+      function loadAssistantState() {
+        try {
+          const raw = localStorage.getItem(ASSISTANT_STORAGE_KEY);
+          if (!raw) {
+            const seed = defaultPrompt();
+            state.assistant.prompts = [seed];
+            state.assistant.activePromptId = seed.id;
+            state.assistant.messages = [{ role: 'assistant', content: '你好，我是智能投资决策助手。你可以先在右上角齿轮里配置API、Prompt和本体JSON。' }];
+            return;
+          }
+          const parsed = JSON.parse(raw);
+          const config = parsed.config || {};
+          state.assistant.config = {
+            provider: String(config.provider || ''),
+            baseUrl: String(config.baseUrl || ''),
+            apiKey: String(config.apiKey || ''),
+            model: String(config.model || ''),
+            temperature: Number.isFinite(Number(config.temperature)) ? Number(config.temperature) : 0.2,
+          };
+          const prompts = Array.isArray(parsed.prompts) ? parsed.prompts.map(p => ({
+            id: String(p.id || generateId()),
+            title: String(p.title || '未命名Prompt'),
+            content: String(p.content || ''),
+          })) : [];
+          state.assistant.prompts = prompts.length ? prompts : [defaultPrompt()];
+          state.assistant.activePromptId = state.assistant.prompts.some(p => p.id === parsed.activePromptId)
+            ? parsed.activePromptId
+            : state.assistant.prompts[0].id;
+          state.assistant.ontology = parsed.ontology && typeof parsed.ontology === 'object' ? parsed.ontology : null;
+          state.assistant.ontologyFileName = String(parsed.ontologyFileName || '');
+          const messages = Array.isArray(parsed.messages)
+            ? parsed.messages
+              .filter(m => m && (m.role === 'assistant' || m.role === 'user'))
+              .map(m => ({ role: m.role, content: String(m.content || '') }))
+            : [];
+          state.assistant.messages = messages.length
+            ? messages
+            : [{ role: 'assistant', content: '你好，我是智能投资决策助手。请告诉我你希望分析的方向。' }];
+        } catch (error) {
+          const seed = defaultPrompt();
+          state.assistant.prompts = [seed];
+          state.assistant.activePromptId = seed.id;
+          state.assistant.messages = [{ role: 'assistant', content: '你好，我是智能投资决策助手。你可以直接输入问题。' }];
+        }
+      }
+
+      function saveAssistantState() {
+        const payload = {
+          config: state.assistant.config,
+          prompts: state.assistant.prompts,
+          activePromptId: state.assistant.activePromptId,
+          ontology: state.assistant.ontology,
+          ontologyFileName: state.assistant.ontologyFileName,
+          messages: state.assistant.messages,
+        };
+        localStorage.setItem(ASSISTANT_STORAGE_KEY, JSON.stringify(payload));
+      }
+
+      function openAssistant(tab = null) {
+        if (tab) state.assistant.activeTab = tab;
+        state.assistant.open = true;
+        if (!state.assistant.messages.length) {
+          state.assistant.messages = [{ role: 'assistant', content: '你好，我是智能投资决策助手。' }];
+        }
+        renderAssistant();
+      }
+
+      function closeAssistant() {
+        state.assistant.open = false;
+        state.assistant.settingsOpen = false;
+        renderAssistant();
+      }
+
+      function openAssistantSettings(tab = null) {
+        if (tab) state.assistant.activeTab = tab;
+        state.assistant.settingsOpen = true;
+        renderAssistant();
+      }
+
+      function closeAssistantSettings() {
+        state.assistant.settingsOpen = false;
+        renderAssistant();
+      }
+
+      function getActivePrompt() {
+        return state.assistant.prompts.find(p => p.id === state.assistant.activePromptId) || null;
+      }
+
+      function summarizeOntology(ontology) {
+        if (!ontology || typeof ontology !== 'object') return '尚未导入本体JSON。';
+        const initiatives = Array.isArray(ontology.initiatives) ? ontology.initiatives.length : 0;
+        const measures = Array.isArray(ontology.initiatives)
+          ? ontology.initiatives.reduce((sum, item) => sum + (Array.isArray(item.keyMeasures) ? item.keyMeasures.length : 0), 0)
+          : 0;
+        const capabilityGroups = Array.isArray(ontology.capabilityGroups) ? ontology.capabilityGroups.length : 0;
+        const capabilities = Array.isArray(ontology.capabilityGroups)
+          ? ontology.capabilityGroups.reduce((sum, group) => sum + (Array.isArray(group.capabilities) ? group.capabilities.length : 0), 0)
+          : 0;
+        const itProjects = Array.isArray(ontology.itProjects) ? ontology.itProjects.length : 0;
+        const links = Array.isArray(ontology.links) ? ontology.links.length : 0;
+        return `已导入 ${state.assistant.ontologyFileName || 'ontology.json'} | 重点工作 ${initiatives} | 关键举措 ${measures} | 能力组 ${capabilityGroups} | 业务能力 ${capabilities} | IT项 ${itProjects} | 连线 ${links}`;
+      }
+
+      function sendAssistantMessage() {
+        const text = String(els.assistantChatInput.value || '').trim();
+        if (!text) return;
+        state.assistant.messages.push({ role: 'user', content: text });
+
+        const activePrompt = getActivePrompt();
+        const ontologyHint = state.assistant.ontology
+          ? `已加载本体（${state.assistant.ontologyFileName || 'ontology.json'}）。`
+          : '尚未加载本体JSON。';
+        const modelHint = state.assistant.config.model
+          ? `当前模型：${state.assistant.config.model}。`
+          : '尚未配置模型。';
+        const promptHint = activePrompt ? `当前Prompt：${activePrompt.title}。` : '尚未选择Prompt。';
+        state.assistant.messages.push({
+          role: 'assistant',
+          content: `已收到你的问题：${text}\n${modelHint}${promptHint}${ontologyHint}\n如需调用外部大模型，请先在右上角齿轮中完成配置。`,
+        });
+
+        els.assistantChatInput.value = '';
+        saveAssistantState();
+        renderAssistant();
+      }
+
+      function renderAssistant() {
+        const { open, settingsOpen, activeTab, config, prompts, ontology, messages } = state.assistant;
+        els.assistantBackdrop.classList.toggle('open', open);
+        els.assistantDialog.classList.toggle('open', open);
+        els.assistantSettingsBackdrop.classList.toggle('open', settingsOpen);
+        els.assistantSettingsModal.classList.toggle('open', settingsOpen);
+        els.assistantTabs.querySelectorAll('[data-assistant-tab]').forEach(tabBtn => {
+          tabBtn.classList.toggle('active', tabBtn.getAttribute('data-assistant-tab') === activeTab);
+        });
+        els.assistantSettingsModal.querySelectorAll('[data-assistant-section]').forEach(section => {
+          section.classList.toggle('active', section.getAttribute('data-assistant-section') === activeTab);
+        });
+
+        els.assistantChatLog.innerHTML = (messages || []).map(msg => `
+          <div class="chat-bubble ${msg.role === 'user' ? 'user' : 'assistant'}">${escapeHtml(msg.content)}</div>
+        `).join('');
+        els.assistantChatLog.scrollTop = els.assistantChatLog.scrollHeight;
+
+        els.aiProviderInput.value = config.provider;
+        els.aiBaseUrlInput.value = config.baseUrl;
+        els.aiApiKeyInput.value = config.apiKey;
+        els.aiModelInput.value = config.model;
+        els.aiTempInput.value = String(config.temperature);
+
+        const activePrompt = getActivePrompt();
+        els.promptList.innerHTML = prompts.map(prompt => `
+          <button class="prompt-item ${prompt.id === state.assistant.activePromptId ? 'active' : ''}" type="button" data-prompt-id="${prompt.id}">${escapeHtml(prompt.title)}</button>
+        `).join('') || '<div class="empty" style="padding:10px;">暂无Prompt</div>';
+        els.promptTitleInput.value = activePrompt?.title || '';
+        els.promptContentInput.value = activePrompt?.content || '';
+
+        els.ontologySummary.textContent = summarizeOntology(ontology);
+        els.ontologyPreview.value = ontology ? JSON.stringify(ontology, null, 2) : '';
+
+        els.promptList.querySelectorAll('[data-prompt-id]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.assistant.activePromptId = btn.getAttribute('data-prompt-id');
+            saveAssistantState();
+            renderAssistant();
+          });
+        });
+      }
+
+      function buildExpandedGroups(groups) {
+        const map = {};
+        groups.forEach(g => map[g.id] = true);
+        return map;
+      }
+
+      function buildExpandedInitiatives(initiatives) {
+        const map = {};
+        initiatives.forEach(i => map[i.id] = false);
+        return map;
+      }
+
+      function formatChineseIndex(num) {
+        const digits = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+        if (num <= 9) return digits[num];
+        if (num === 10) return '十';
+        if (num < 20) return `十${digits[num % 10]}`;
+        const tens = Math.floor(num / 10);
+        const units = num % 10;
+        return `${digits[tens]}十${units ? digits[units] : ''}`;
+      }
+
+      function normalizeBudget(value) {
+        const num = Number(value);
+        if (!Number.isFinite(num) || num < 0) return 0;
+        return Math.round(num * 100) / 100;
+      }
+
+      function formatBudget(value) {
+        const normalized = normalizeBudget(value);
+        if (Number.isInteger(normalized)) return String(normalized);
+        return normalized.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+      }
+
+      function getBudgetTotal(items) {
+        return items.reduce((sum, item) => sum + normalizeBudget(item.budget), 0);
+      }
+
+      function getBudgetRatio(item) {
+        if (!item || item.kind !== 'product' && item.kind !== 'project') return null;
+        const pool = state.data.itProjects.filter(it => it.kind === item.kind);
+        const total = getBudgetTotal(pool);
+        if (total <= 0) return 0;
+        return (normalizeBudget(item.budget) / total) * 100;
+      }
+
+      function formatPercent(value) {
+        if (!Number.isFinite(Number(value))) return '0%';
+        const fixed = Number(value).toFixed(1).replace(/\.0$/, '');
+        return `${fixed}%`;
+      }
+
+      function normalizeData(data) {
+        return {
+          initiatives: (data.initiatives || []).map((i, idx) => ({
+            id: i.id || `i-${idx}-${generateId()}`,
+            title: i.title || `重点工作${idx + 1}`,
+            description: typeof i.description === 'string' ? i.description : '',
+            status: i.status === 'continued' ? 'continued' : 'new',
+            keyMeasures: (i.keyMeasures || []).map((m, mi) => ({
+              id: m.id || `m-${idx}-${mi}-${generateId()}`,
+              title: m.title || `关键举措${mi + 1}`,
+              description: typeof m.description === 'string' ? m.description : '',
+              status: m.status === 'continued' ? 'continued' : 'new',
+            })),
+          })),
+          valueStreams: (data.valueStreams || []).map((v, vi) => ({
+            id: v.id || `vs-${vi}-${generateId()}`,
+            title: v.title || `LV2价值定位与目标${vi + 1}`,
+            status: v.status === 'new' ? 'new' : 'existing',
+          })),
+          capabilityGroups: (data.capabilityGroups || []).map((g, gi) => ({
+            id: g.id || `g-${gi}-${generateId()}`,
+            title: g.title || `能力组${gi + 1}`,
+            capabilities: (g.capabilities || []).map((c, ci) => ({
+              id: c.id || `c-${gi}-${ci}-${generateId()}`,
+              title: c.title || `能力${ci + 1}`,
+              status: c.status === 'new' ? 'new' : 'existing',
+              gapDescription: typeof c.gapDescription === 'string' ? c.gapDescription : '',
+            })),
+          })),
+          itProjects: (data.itProjects || []).map((it, idx) => ({
+            id: it.id || `it-${idx}-${generateId()}`,
+            title: it.title || `IT项${idx + 1}`,
+            status: it.status === 'new' ? 'new' : 'existing',
+            kind: it.kind === 'product' ? 'product' : 'project',
+            featurePlan: typeof it.featurePlan === 'string' ? it.featurePlan : '',
+            budget: normalizeBudget(it.budget),
+          })),
+          links: (data.links || []).filter(l => l && l.source && l.target).map((l, idx) => ({
+            id: l.id || `l-${idx}-${generateId()}`,
+            source: l.source,
+            target: l.target,
+            sourceAnchor: ALL_ANCHORS.includes(l.sourceAnchor) ? l.sourceAnchor : undefined,
+            targetAnchor: ALL_ANCHORS.includes(l.targetAnchor) ? l.targetAnchor : undefined,
+          })),
+        };
+      }
+
+      function allNodeIds() {
+        return [
+          ...state.data.initiatives.map(i => i.id),
+          ...state.data.initiatives.flatMap(i => (i.keyMeasures || []).map(m => m.id)),
+          ...state.data.valueStreams.map(v => v.id),
+          ...state.data.capabilityGroups.flatMap(g => g.capabilities.map(c => c.id)),
+          ...state.data.itProjects.map(it => it.id),
+        ];
+      }
+
+      function getNodeTypeById(id) {
+        if (state.data.initiatives.some(i => i.id === id)) return 'initiative';
+        if (state.data.initiatives.some(i => (i.keyMeasures || []).some(m => m.id === id))) return 'keyMeasure';
+        if (state.data.valueStreams.some(v => v.id === id)) return 'valueStream';
+        if (state.data.capabilityGroups.some(g => g.id === id)) return 'capabilityGroup';
+        if (state.data.capabilityGroups.some(g => g.capabilities.some(c => c.id === id))) return 'capability';
+        if (state.data.itProjects.some(it => it.id === id)) return 'itProject';
+        return '';
+      }
+
+      function getInitiativeByMeasureId(measureId) {
+        return state.data.initiatives.find(i => (i.keyMeasures || []).some(m => m.id === measureId)) || null;
+      }
+
+      function isMeasureExpanded(measureId) {
+        const initiative = getInitiativeByMeasureId(measureId);
+        if (!initiative) return true;
+        return state.expandedInitiatives[initiative.id] === true;
+      }
+
+      function getCapabilityGroupByCapabilityId(capabilityId) {
+        return state.data.capabilityGroups.find(g => g.capabilities.some(c => c.id === capabilityId)) || null;
+      }
+
+      function isCapabilityExpanded(capabilityId) {
+        const group = getCapabilityGroupByCapabilityId(capabilityId);
+        if (!group) return true;
+        return state.expandedGroups[group.id] !== false;
+      }
+
+      function getDisplayedNodeId(nodeId) {
+        const type = getNodeTypeById(nodeId);
+        if (type === 'keyMeasure' && !isMeasureExpanded(nodeId)) {
+          return getInitiativeByMeasureId(nodeId)?.id || nodeId;
+        }
+        if (type === 'capability' && !isCapabilityExpanded(nodeId)) {
+          return getCapabilityGroupByCapabilityId(nodeId)?.id || nodeId;
+        }
+        return nodeId;
+      }
+
+      function getGraph() {
+        const adj = {}, revAdj = {};
+        allNodeIds().forEach(id => { adj[id] = []; revAdj[id] = []; });
+        state.data.initiatives.forEach(initiative => {
+          (initiative.keyMeasures || []).forEach(measure => {
+            if (adj[initiative.id]) adj[initiative.id].push(measure.id);
+            if (revAdj[measure.id]) revAdj[measure.id].push(initiative.id);
+          });
+        });
+        state.data.links.forEach(l => {
+          if (adj[l.source]) adj[l.source].push(l.target);
+          if (revAdj[l.target]) revAdj[l.target].push(l.source);
+        });
+        return { adj, revAdj };
+      }
+
+      function getAnalysis() {
+        const { adj, revAdj } = getGraph();
+        const itOrphans = new Set();
+        const capabilityGaps = new Set();
+        const unusedCapabilities = new Set();
+        const initiativeIds = new Set(state.data.initiatives.map(i => i.id));
+
+        const hasInitiativeAncestor = (startId) => {
+          let found = false;
+          const visited = new Set();
+          const dfs = (id) => {
+            if (initiativeIds.has(id)) { found = true; return; }
+            visited.add(id);
+            (revAdj[id] || []).forEach(parent => {
+              if (!visited.has(parent) && !found) dfs(parent);
+            });
+          };
+          dfs(startId);
+          return found;
+        };
+
+        state.data.itProjects.forEach(project => {
+          if (!hasInitiativeAncestor(project.id)) itOrphans.add(project.id);
+        });
+
+        state.data.capabilityGroups.forEach(group => {
+          group.capabilities.forEach(cap => {
+            const parents = revAdj[cap.id] || [];
+            const children = adj[cap.id] || [];
+            const linkedToInitiative = hasInitiativeAncestor(cap.id);
+            const linkedToIT = children.some(c => state.data.itProjects.some(it => it.id === c));
+            if (parents.length === 0 && children.length === 0) unusedCapabilities.add(cap.id);
+            else if (linkedToInitiative && !linkedToIT) capabilityGaps.add(cap.id);
+          });
+        });
+
+        return { itOrphans, capabilityGaps, unusedCapabilities };
+      }
+
+      function getRelativePoint(clientX, clientY) {
+        const rect = els.canvas.getBoundingClientRect();
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top,
+        };
+      }
+
+      function updatePositions() {
+        const canvasRect = els.canvas.getBoundingClientRect();
+        const map = {};
+        const anchorMap = {};
+        els.board.querySelectorAll('[data-node-id]').forEach(el => {
+          const id = el.getAttribute('data-node-id');
+          if (!id || map[id]) return;
+          if (!el) return;
+          const rect = el.getBoundingClientRect();
+          const left = rect.left - canvasRect.left;
+          const right = rect.right - canvasRect.left;
+          const top = rect.top - canvasRect.top;
+          const bottom = rect.bottom - canvasRect.top;
+          const width = rect.width;
+          const height = rect.height;
+          map[id] = {
+            left,
+            right,
+            top,
+            bottom,
+            width,
+            height,
+            visible: rect.width > 0 && rect.height > 0,
+          };
+          anchorMap[id] = {
+            top: { x: left + width / 2, y: top },
+            right: { x: right, y: top + height / 2 },
+            bottom: { x: left + width / 2, y: bottom },
+            left: { x: left, y: top + height / 2 },
+          };
+        });
+        state.nodePositions = map;
+        state.anchorPositions = anchorMap;
+        state.canvasSize = {
+          width: Math.max(els.canvas.scrollWidth, els.canvas.clientWidth),
+          height: Math.max(els.canvas.scrollHeight, els.canvas.clientHeight),
+        };
+        [els.linesBottom, els.linesTop, els.lineHit].forEach(svg => {
+          svg.setAttribute('viewBox', `0 0 ${state.canvasSize.width} ${state.canvasSize.height}`);
+        });
+      }
+
+      function getPreferredAnchorPair(sourceId, targetId) {
+        const s = state.nodePositions[sourceId];
+        const t = state.nodePositions[targetId];
+        if (!s || !t) return { sourceAnchor: 'right', targetAnchor: 'left' };
+        const scx = (s.left + s.right) / 2;
+        const scy = (s.top + s.bottom) / 2;
+        const tcx = (t.left + t.right) / 2;
+        const tcy = (t.top + t.bottom) / 2;
+        const dx = tcx - scx;
+        const dy = tcy - scy;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          return dx >= 0 ? { sourceAnchor: 'right', targetAnchor: 'left' } : { sourceAnchor: 'left', targetAnchor: 'right' };
+        }
+        return dy >= 0 ? { sourceAnchor: 'bottom', targetAnchor: 'top' } : { sourceAnchor: 'top', targetAnchor: 'bottom' };
+      }
+
+      function getAnchorPoint(nodeId, anchorSide) {
+        const anchors = state.anchorPositions[nodeId];
+        const pos = state.nodePositions[nodeId];
+        if (!anchors || !pos) return null;
+        const borderOffset = 0.5;
+        if (anchorSide === 'top') return { x: anchors.top.x, y: pos.top + borderOffset };
+        if (anchorSide === 'right') return { x: pos.right - borderOffset, y: anchors.right.y };
+        if (anchorSide === 'bottom') return { x: anchors.bottom.x, y: pos.bottom - borderOffset };
+        return { x: pos.left + borderOffset, y: anchors.left.y };
+      }
+
+      function getStableTargetAnchor(nodeId, point, previousAnchor) {
+        const anchors = state.anchorPositions[nodeId];
+        if (!anchors) return 'left';
+        const distance = (a) => Math.hypot(point.x - anchors[a].x, point.y - anchors[a].y);
+        let best = 'left';
+        let min = Infinity;
+        ALL_ANCHORS.forEach(side => {
+          const d = distance(side);
+          if (d < min) { min = d; best = side; }
+        });
+        if (previousAnchor && anchors[previousAnchor]) {
+          const prevDist = distance(previousAnchor);
+          if (prevDist <= min + 14) return previousAnchor;
+        }
+        return best;
+      }
+
+      function getPathData(start, end, startAnchor, endAnchor) {
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const distance = Math.hypot(dx, dy);
+        const base = Math.max(44, Math.min(110, distance * 0.38));
+        const anchorVector = (side, strength = base) => {
+          if (side === 'top') return { x: 0, y: -strength };
+          if (side === 'right') return { x: strength, y: 0 };
+          if (side === 'bottom') return { x: 0, y: strength };
+          return { x: -strength, y: 0 };
+        };
+        const sv = anchorVector(startAnchor || 'right');
+        const ev = anchorVector(endAnchor || 'left');
+        const crossBias = Math.min(42, distance * 0.12);
+        const cp1 = {
+          x: start.x + sv.x + (Math.abs(sv.x) > 0 ? 0 : dx * 0.08),
+          y: start.y + sv.y + (Math.abs(sv.y) > 0 ? 0 : dy * 0.08) + (startAnchor === 'left' || startAnchor === 'right' ? Math.sign(dy || 1) * crossBias : 0),
+        };
+        const cp2 = {
+          x: end.x + ev.x - (Math.abs(ev.x) > 0 ? 0 : dx * 0.08),
+          y: end.y + ev.y - (Math.abs(ev.y) > 0 ? 0 : dy * 0.08) - (endAnchor === 'left' || endAnchor === 'right' ? Math.sign(dy || 1) * crossBias : 0),
+        };
+        return `M ${start.x} ${start.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${end.x} ${end.y}`;
+      }
+
+      function openModal(type, item = null, groupId = null) {
+        state.modal = { open: true, type, item, groupId };
+        renderModal();
+      }
+
+      function closeModal() {
+        state.modal = { open: false, type: '', item: null, groupId: null };
+        renderModal();
+      }
+
+      function createLink(sourceId, targetId, sourceAnchor, targetAnchor) {
+        if (!sourceId || !targetId || sourceId === targetId) return;
+        const sourceType = getNodeTypeById(sourceId);
+        const targetType = getNodeTypeById(targetId);
+        if (!sourceType || !targetType) return;
+        if (sourceType === 'initiative' || targetType === 'initiative' || sourceType === 'capabilityGroup' || targetType === 'capabilityGroup') return;
+        const exists = state.data.links.some(l =>
+          (l.source === sourceId && l.target === targetId) ||
+          (l.source === targetId && l.target === sourceId)
+        );
+        if (exists) return;
+        const preferred = (!sourceAnchor || !targetAnchor) ? getPreferredAnchorPair(sourceId, targetId) : null;
+        state.data.links.push({
+          id: generateId(),
+          source: sourceId,
+          target: targetId,
+          sourceAnchor: sourceAnchor || preferred.sourceAnchor,
+          targetAnchor: targetAnchor || preferred.targetAnchor,
+        });
+      }
+
+      function startAnchorDrag(nodeId, anchorSide, event) {
+        if (!state.isEditMode) return;
+        event.preventDefault();
+        event.stopPropagation();
+        updatePositions();
+        const start = getAnchorPoint(nodeId, anchorSide);
+        if (!start) return;
+        state.dragLink = {
+          sourceId: nodeId,
+          sourceAnchor: anchorSide,
+          start,
+          current: start,
+          targetId: null,
+          targetAnchor: null,
+        };
+        state.hoveredNode = nodeId;
+        render();
+      }
+
+      function endDrag(clientX, clientY) {
+        if (!state.dragLink) return;
+        const point = getRelativePoint(clientX, clientY);
+        const targetEl = document.elementFromPoint(clientX, clientY)?.closest('[data-node-id]');
+        if (targetEl) {
+          const targetId = targetEl.getAttribute('data-node-id');
+          if (targetId && targetId !== state.dragLink.sourceId) {
+            const explicitAnchorEl = document.elementFromPoint(clientX, clientY)?.closest('[data-anchor-side]');
+            const targetAnchor = explicitAnchorEl?.getAttribute('data-anchor-side') || getStableTargetAnchor(targetId, point, state.dragLink.targetAnchor);
+            createLink(state.dragLink.sourceId, targetId, state.dragLink.sourceAnchor, targetAnchor);
+          }
+        }
+        state.dragLink = null;
+        render();
+      }
+
+      document.addEventListener('pointermove', (event) => {
+        if (!state.dragLink) return;
+        const point = getRelativePoint(event.clientX, event.clientY);
+        const targetEl = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-node-id]');
+        let next = { ...state.dragLink, current: point, targetId: null, targetAnchor: null };
+        if (targetEl) {
+          const targetId = targetEl.getAttribute('data-node-id');
+          if (targetId && targetId !== state.dragLink.sourceId) {
+            const explicitAnchorEl = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-anchor-side]');
+            const targetAnchor = explicitAnchorEl?.getAttribute('data-anchor-side') || getStableTargetAnchor(targetId, point, state.dragLink.targetAnchor);
+            const snapped = getAnchorPoint(targetId, targetAnchor) || point;
+            next = { ...next, current: snapped, targetId, targetAnchor };
+          }
+        }
+        state.dragLink = next;
+        renderLines();
+        renderInteractionLayer();
+        renderLinkStatus();
+        renderNodeClasses();
+      });
+
+      document.addEventListener('pointerup', (event) => {
+        if (state.dragLink) endDrag(event.clientX, event.clientY);
+      });
+
+      function handleNodeClick(nodeId, nodeType) {
+        if (nodeType === 'initiative') {
+          toggleInitiativeMeasures(nodeId);
+          return;
+        }
+        if (nodeType === 'capabilityGroup') return;
+        if (!state.isEditMode || state.dragLink) return;
+        if (!state.linkingSource) {
+          state.linkingSource = nodeId;
+        } else {
+          if (state.linkingSource !== nodeId && nodeType !== 'initiative') createLink(state.linkingSource, nodeId);
+          state.linkingSource = null;
+        }
+        render();
+      }
+
+      function deleteLink(linkId) {
+        if (!state.isEditMode) return;
+        state.data.links = state.data.links.filter(l => l.id !== linkId);
+        render();
+      }
+
+      function toggleEditMode() {
+        state.isEditMode = !state.isEditMode;
+        state.linkingSource = null;
+        state.dragLink = null;
+        render();
+      }
+
+      function toggleGroup(groupId) {
+        state.expandedGroups[groupId] = !state.expandedGroups[groupId];
+        render();
+      }
+
+      function toggleInitiativeMeasures(initiativeId) {
+        const willExpand = state.expandedInitiatives[initiativeId] !== true;
+        state.data.initiatives.forEach(item => {
+          state.expandedInitiatives[item.id] = false;
+        });
+        state.expandedInitiatives[initiativeId] = willExpand;
+        state.linkingSource = null;
+        state.dragLink = null;
+        render();
+      }
+
+      function deleteItem(type, id, groupId = null) {
+        if (!confirm('确定要删除此项及其相关连线吗？')) return;
+        const cascadeIds = new Set([id]);
+        if (type === 'initiative') {
+          const initiative = state.data.initiatives.find(i => i.id === id);
+          (initiative?.keyMeasures || []).forEach(measure => cascadeIds.add(measure.id));
+          state.data.initiatives = state.data.initiatives.filter(i => i.id !== id);
+          delete state.expandedInitiatives[id];
+        }
+        if (type === 'keyMeasure') {
+          const initiative = state.data.initiatives.find(i => i.id === groupId);
+          if (initiative) initiative.keyMeasures = initiative.keyMeasures.filter(m => m.id !== id);
+        }
+        if (type === 'valueStream') {
+          state.data.valueStreams = state.data.valueStreams.filter(v => v.id !== id);
+        }
+        if (type === 'capabilityGroup') {
+          const group = state.data.capabilityGroups.find(g => g.id === id);
+          (group?.capabilities || []).forEach(cap => cascadeIds.add(cap.id));
+          state.data.capabilityGroups = state.data.capabilityGroups.filter(g => g.id !== id);
+          delete state.expandedGroups[id];
+        }
+        if (type === 'capability') {
+          const group = state.data.capabilityGroups.find(g => g.id === groupId);
+          if (group) group.capabilities = group.capabilities.filter(c => c.id !== id);
+        }
+        if (type === 'itProject') state.data.itProjects = state.data.itProjects.filter(it => it.id !== id);
+        state.data.links = state.data.links.filter(l => !cascadeIds.has(l.source) && !cascadeIds.has(l.target));
+        render();
+      }
+
+      function exportData() {
+        const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'it_investment_plan.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function importData(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(String(reader.result || '{}'));
+            state.data = normalizeData(parsed);
+            state.expandedGroups = buildExpandedGroups(state.data.capabilityGroups);
+            state.expandedInitiatives = buildExpandedInitiatives(state.data.initiatives);
+            render();
+          } catch (e) {
+            alert('读取文件失败');
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function renderModal() {
+        const { open, type, item, groupId } = state.modal;
+        els.modalBackdrop.classList.toggle('open', open);
+        if (!open) return;
+
+        const isNew = !item;
+        const titleMap = {
+          initiative: '重点工作',
+          keyMeasure: '关键举措',
+          valueStream: 'LV2价值定位与目标',
+          capabilityGroup: '业务能力组',
+          capability: '业务能力',
+          itProject: 'IT产品 / 项目',
+        };
+        els.modalTitle.textContent = `${isNew ? '新增' : '编辑'} ${titleMap[type] || ''}`;
+
+        const form = document.createElement('form');
+        form.id = 'plannerForm';
+        form.innerHTML = '';
+
+        form.appendChild(fieldInput('title', '名称', item?.title || ''));
+        if (type === 'initiative' || type === 'keyMeasure') form.appendChild(fieldTextarea('description', '描述', item?.description || ''));
+        if (type === 'capability') form.appendChild(fieldTextarea('gapDescription', '差距描述', item?.gapDescription || ''));
+        if (type === 'itProject') form.appendChild(fieldTextarea('featurePlan', '特性规划', item?.featurePlan || ''));
+        if (type === 'itProject') form.appendChild(fieldNumber('budget', '预算金额（万元）', item?.budget ?? 0, '0', '0.01'));
+        if (type !== 'capabilityGroup') {
+          const statusValue = item?.status || ((type === 'initiative' || type === 'keyMeasure') ? 'new' : 'existing');
+          const options = (type === 'initiative' || type === 'keyMeasure')
+            ? [['new','新增'], ['continued','延续']]
+            : [['existing','存量'], ['new','新增']];
+          form.appendChild(fieldSelect('status', '状态', statusValue, options));
+        }
+        if (type === 'itProject') {
+          form.appendChild(fieldSelect('kind', '类别', item?.kind || 'project', [['product','产品'], ['project','项目']]));
+        }
+        els.modalBody.innerHTML = '';
+        els.modalBody.appendChild(form);
+
+        els.saveModalBtn.onclick = () => {
+          const fd = new FormData(form);
+          const title = String(fd.get('title') || '').trim();
+          if (!title) return;
+          const status = String(fd.get('status') || 'new');
+          const description = String(fd.get('description') || '');
+          const gapDescription = String(fd.get('gapDescription') || '');
+          const kind = String(fd.get('kind') || 'project');
+          const featurePlan = String(fd.get('featurePlan') || '');
+          const budget = normalizeBudget(fd.get('budget'));
+          if (type === 'initiative') {
+            if (isNew) {
+              const id = generateId();
+              state.data.initiatives.push({ id, title, description, status, keyMeasures: [] });
+              state.expandedInitiatives[id] = false;
+            } else Object.assign(item, { title, description, status });
+          }
+          if (type === 'keyMeasure') {
+            const initiative = state.data.initiatives.find(i => i.id === groupId);
+            if (!initiative) return;
+            if (isNew) initiative.keyMeasures.push({ id: generateId(), title, description, status });
+            else Object.assign(item, { title, description, status });
+            state.data.initiatives.forEach(i => {
+              state.expandedInitiatives[i.id] = i.id === initiative.id;
+            });
+          }
+          if (type === 'valueStream') {
+            if (isNew) state.data.valueStreams.push({ id: generateId(), title, status });
+            else Object.assign(item, { title, status });
+          }
+          if (type === 'capabilityGroup') {
+            if (isNew) {
+              const id = generateId();
+              state.data.capabilityGroups.push({ id, title, capabilities: [] });
+              state.expandedGroups[id] = true;
+            } else item.title = title;
+          }
+          if (type === 'capability') {
+            const group = state.data.capabilityGroups.find(g => g.id === groupId);
+            if (!group) return;
+            if (isNew) group.capabilities.push({ id: generateId(), title, status, gapDescription });
+            else Object.assign(item, { title, status, gapDescription });
+          }
+          if (type === 'itProject') {
+            if (isNew) state.data.itProjects.push({ id: generateId(), title, status, kind, featurePlan, budget });
+            else Object.assign(item, { title, status, kind, featurePlan, budget });
+          }
+          closeModal();
+          render();
+        };
+      }
+
+      function fieldInput(name, label, value) {
+        const div = document.createElement('div');
+        div.className = 'field';
+        div.innerHTML = `<label>${label}</label><input name="${name}" value="${escapeAttr(value)}" />`;
+        return div;
+      }
+      function fieldTextarea(name, label, value) {
+        const div = document.createElement('div');
+        div.className = 'field';
+        div.innerHTML = `<label>${label}</label><textarea name="${name}">${escapeHtml(value)}</textarea>`;
+        return div;
+      }
+      function fieldSelect(name, label, value, options) {
+        const div = document.createElement('div');
+        div.className = 'field';
+        div.innerHTML = `<label>${label}</label><select name="${name}">${options.map(([v, t]) => `<option value="${v}" ${v===value?'selected':''}>${t}</option>`).join('')}</select>`;
+        return div;
+      }
+      function fieldNumber(name, label, value, min = '0', step = '1') {
+        const div = document.createElement('div');
+        div.className = 'field';
+        div.innerHTML = `<label>${label}</label><input type="number" name="${name}" value="${escapeAttr(value)}" min="${min}" step="${step}" />`;
+        return div;
+      }
+
+      function escapeHtml(v) { return String(v).replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s])); }
+      function escapeAttr(v) { return escapeHtml(v).replace(/"/g, '&quot;'); }
+
+      function getFocusState() {
+        const activeNodeIds = new Set();
+        const activeLinkIds = new Set();
+
+        const hoveredDisplayId = state.hoveredNode ? getDisplayedNodeId(state.hoveredNode) : null;
+        const linkingDisplayId = state.linkingSource ? getDisplayedNodeId(state.linkingSource) : null;
+        const dragSourceDisplayId = state.dragLink?.sourceId ? getDisplayedNodeId(state.dragLink.sourceId) : null;
+        const dragTargetDisplayId = state.dragLink?.targetId ? getDisplayedNodeId(state.dragLink.targetId) : null;
+
+        if (hoveredDisplayId) activeNodeIds.add(hoveredDisplayId);
+        if (linkingDisplayId) activeNodeIds.add(linkingDisplayId);
+        if (dragSourceDisplayId) activeNodeIds.add(dragSourceDisplayId);
+        if (dragTargetDisplayId) activeNodeIds.add(dragTargetDisplayId);
+
+        state.data.links.forEach(link => {
+          const displaySource = getDisplayedNodeId(link.source);
+          const displayTarget = getDisplayedNodeId(link.target);
+          const relatesToHoveredNode = !!(hoveredDisplayId && (displaySource === hoveredDisplayId || displayTarget === hoveredDisplayId));
+          const relatesToLinkingSource = !!(linkingDisplayId && (displaySource === linkingDisplayId || displayTarget === linkingDisplayId || link.source === state.linkingSource || link.target === state.linkingSource));
+          const relatesToDrag = !!(state.dragLink && (
+            displaySource === dragSourceDisplayId ||
+            displayTarget === dragSourceDisplayId ||
+            displaySource === dragTargetDisplayId ||
+            displayTarget === dragTargetDisplayId ||
+            link.source === state.dragLink.sourceId ||
+            link.target === state.dragLink.sourceId ||
+            link.source === state.dragLink.targetId ||
+            link.target === state.dragLink.targetId
+          ));
+          const relatesToHoveredLink = state.hoveredLinkId === link.id;
+          const isActive = relatesToHoveredNode || relatesToLinkingSource || relatesToDrag || relatesToHoveredLink;
+          if (isActive) {
+            activeLinkIds.add(link.id);
+            activeNodeIds.add(displaySource);
+            activeNodeIds.add(displayTarget);
+          }
+        });
+
+        return {
+          activeNodeIds,
+          activeLinkIds,
+          hasFocus: activeNodeIds.size > 0 || activeLinkIds.size > 0,
+        };
+      }
+
+      function renderNodeClasses() {
+        const analysis = getAnalysis();
+        const focus = getFocusState();
+        document.querySelectorAll('[data-node-id]').forEach(el => {
+          const id = el.getAttribute('data-node-id');
+          const type = el.getAttribute('data-node-type');
+          const groupHasActiveCapability = type === 'capabilityGroup'
+            ? (state.data.capabilityGroups.find(g => g.id === id)?.capabilities || []).some(cap => focus.activeNodeIds.has(cap.id))
+            : false;
+          const active = focus.activeNodeIds.has(id) || groupHasActiveCapability;
+          const source = state.linkingSource === id || state.dragLink?.sourceId === id;
+          const showAnchors = state.isEditMode && (state.hoveredNode === id || state.dragLink?.sourceId === id || state.dragLink?.targetId === id);
+          const shouldDim = !state.isEditMode && focus.hasFocus && !active;
+          el.classList.toggle('active', !!active);
+          el.classList.toggle('dimmed', !!shouldDim);
+          el.classList.toggle('source', !!source);
+          el.classList.toggle('drag-related', !!(state.dragLink && (state.dragLink.sourceId === id || state.dragLink.targetId === id)));
+          el.classList.toggle('show-anchors', !!showAnchors);
+          el.classList.remove('warning-red','warning-orange','unused','involved');
+          if (type === 'itProject' && analysis.itOrphans.has(id)) el.classList.add('warning-red');
+          if (type === 'capability' && analysis.capabilityGaps.has(id)) el.classList.add('warning-orange');
+          if (type === 'capability' && analysis.unusedCapabilities.has(id)) el.classList.add('unused');
+          if (type === 'capability' && !analysis.unusedCapabilities.has(id)) el.classList.add('involved');
+        });
+      }
+
+      function renderLines() {
+        updatePositions();
+        const lines = [];
+        const hits = [];
+        const top = [];
+        const focus = getFocusState();
+        const activeIds = focus.activeLinkIds;
+
+        state.data.links.forEach(link => {
+          const displaySource = getDisplayedNodeId(link.source);
+          const displayTarget = getDisplayedNodeId(link.target);
+          if (!displaySource || !displayTarget || displaySource === displayTarget) return;
+          const remapped = displaySource !== link.source || displayTarget !== link.target;
+          const anchors = (remapped || !link.sourceAnchor || !link.targetAnchor)
+            ? getPreferredAnchorPair(displaySource, displayTarget)
+            : null;
+          const sourceAnchor = remapped ? anchors.sourceAnchor : (link.sourceAnchor || anchors.sourceAnchor);
+          const targetAnchor = remapped ? anchors.targetAnchor : (link.targetAnchor || anchors.targetAnchor);
+          const start = getAnchorPoint(displaySource, sourceAnchor);
+          const end = getAnchorPoint(displayTarget, targetAnchor);
+          if (!start || !end) return;
+          const path = getPathData(start, end, sourceAnchor, targetAnchor);
+          const isActive = activeIds.has(link.id);
+          const shouldDim = !state.isEditMode && focus.hasFocus && !isActive;
+          lines.push(`<path class="line-base${shouldDim ? ' dimmed' : ''}" d="${path}" />`);
+          if (state.isEditMode) {
+            hits.push(`<path class="line-hit-path" data-link-id="${link.id}" d="${path}" />`);
+          }
+          if (isActive) {
+            top.push(`<path class="line-active" d="${path}" />`);
+            top.push(`<circle class="line-dot" cx="${start.x}" cy="${start.y}" r="4" />`);
+            top.push(`<circle class="line-dot" cx="${end.x}" cy="${end.y}" r="4" />`);
+          }
+        });
+
+        els.linesBottom.innerHTML = lines.join('');
+        els.lineHit.innerHTML = hits.join('');
+        els.linesTop.innerHTML = top.join('');
+
+        els.lineHit.querySelectorAll('[data-link-id]').forEach(path => {
+          path.addEventListener('mouseenter', () => {
+            state.hoveredLinkId = path.getAttribute('data-link-id');
+            renderInteractionLayer();
+          });
+          path.addEventListener('mouseleave', () => {
+            state.hoveredLinkId = null;
+            renderInteractionLayer();
+          });
+          path.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteLink(path.getAttribute('data-link-id'));
+          });
+        });
+      }
+
+      function renderInteractionLayer() {
+        const top = [];
+        if (state.dragLink?.start && state.dragLink?.current) {
+          const previewPath = getPathData(
+            state.dragLink.start,
+            state.dragLink.current,
+            state.dragLink.sourceAnchor,
+            state.dragLink.targetAnchor || getStableTargetAnchor(state.dragLink.sourceId, state.dragLink.current, 'right')
+          );
+          top.push(`<path class="line-preview" d="${previewPath}" />`);
+          top.push(`<circle class="line-dot" cx="${state.dragLink.start.x}" cy="${state.dragLink.start.y}" r="4" />`);
+          if (state.dragLink.targetId && state.dragLink.targetAnchor) {
+            top.push(`<circle class="line-dot" cx="${state.dragLink.current.x}" cy="${state.dragLink.current.y}" r="4" />`);
+          }
+        }
+        const activeOverlay = els.linesTop.innerHTML;
+        els.linesTop.innerHTML = activeOverlay + top.join('');
+      }
+
+      function renderLinkStatus() {
+        const active = !!(state.dragLink || state.linkingSource);
+        els.linkStatus.style.display = active ? 'inline-flex' : 'none';
+      }
+
+      function renderBoard() {
+        const analysis = getAnalysis();
+        const productItems = state.data.itProjects.filter(it => it.kind === 'product');
+        const projectItems = state.data.itProjects.filter(it => it.kind !== 'product');
+        const totalCapabilities = state.data.capabilityGroups.reduce((sum, group) => sum + group.capabilities.length, 0);
+        const totalBudget = getBudgetTotal(state.data.itProjects);
+        const productBudget = getBudgetTotal(productItems);
+        const projectBudget = getBudgetTotal(projectItems);
+
+        els.board.innerHTML = `
+          <section class="col">
+            <div class="section-header">
+              <h2 class="section-title"><span class="bar"></span>年度重点工作</h2>
+              ${state.isEditMode ? '<button class="mini-icon" data-action="add-initiative" title="新增">＋</button>' : ''}
+            </div>
+            <div class="list initiative-list">
+              ${state.data.initiatives.length ? state.data.initiatives.map((item, idx) => renderInitiativeBlock(item, idx + 1, analysis)).join('') : '<div class="empty">暂无重点工作，点击右上角“+”新增。</div>'}
+            </div>
+          </section>
+          <div class="right-col">
+            <section class="section-panel value-stream-panel">
+              <div class="section-header">
+                <h2 class="section-title"><span class="bar" style="background: var(--amber);"></span>LV2价值定位与目标</h2>
+                ${state.isEditMode ? '<button class="mini-icon" data-action="add-value-stream" title="新增LV2价值定位与目标">＋</button>' : ''}
+              </div>
+              <div class="value-stream-row">
+                ${state.data.valueStreams.length ? state.data.valueStreams.map(item => renderNode(item, 'valueStream', null, null, analysis)).join('') : '<div class="empty" style="min-width: 220px; width: 100%;">暂无LV2价值定位与目标，点击右上角“+”新增。</div>'}
+              </div>
+            </section>
+            <section class="section-panel">
+              <div class="section-header">
+                <h2 class="section-title"><span class="bar slate"></span>业务能力</h2>
+                <div class="section-header-tools">
+                  <span class="section-summary">能力总数：${totalCapabilities}项</span>
+                  ${state.isEditMode ? '<button class="mini-icon" data-action="add-group" title="新增">＋</button>' : ''}
+                </div>
+              </div>
+              <div class="group-grid">
+                ${state.data.capabilityGroups.length ? state.data.capabilityGroups.map(group => `
+                  <div class="group-card node" id="node-${group.id}" data-node-id="${group.id}" data-node-type="capabilityGroup">
+                    <div class="group-head" data-group-toggle="${group.id}">
+                      <div class="group-name">${state.expandedGroups[group.id] !== false ? '▾' : '▸'} ${escapeHtml(group.title)}</div>
+                      <div class="group-head-right">
+                        <span class="group-meta">${group.capabilities.length}项能力</span>
+                        ${state.isEditMode ? `
+                          <div class="group-actions">
+                            <button class="mini-icon" data-action="add-capability" data-group-id="${group.id}" title="新增能力">＋</button>
+                            <button class="mini-icon" data-action="edit-group" data-group-id="${group.id}" title="编辑">✎</button>
+                            <button class="mini-icon danger" data-action="delete-group" data-group-id="${group.id}" title="删除">🗑</button>
+                          </div>` : ''}
+                      </div>
+                    </div>
+                    ${state.expandedGroups[group.id] !== false ? `<div class="cap-list">${group.capabilities.length ? group.capabilities.map(cap => renderNode(cap, 'capability', group.id, null, analysis)).join('') : '<div class="empty">暂无业务能力</div>'}</div>` : ''}
+                  </div>`).join('') : '<div class="empty">暂无业务能力组，点击右上角“+”新增。</div>'}
+              </div>
+            </section>
+            <section class="section-panel">
+              <div class="section-header">
+                <h2 class="section-title"><span class="bar indigo"></span>IT产品 / 项目</h2>
+                <div class="section-header-tools">
+                  <span class="section-summary">汇总：${formatBudget(totalBudget)} 万元</span>
+                  ${state.isEditMode ? '<button class="mini-icon" data-action="add-it" title="新增">＋</button>' : ''}
+                </div>
+              </div>
+              <div class="it-grid">
+                <div class="it-subsection">
+                  <div class="subhead-row">
+                    <h3 class="subhead">产品</h3>
+                    <span class="sub-summary">${productItems.length}项 · ${formatBudget(productBudget)}万元</span>
+                  </div>
+                  <div class="it-card-grid products-grid">${productItems.length ? productItems.map(it => renderNode(it, 'itProject', null, null, analysis)).join('') : '<div class="empty" style="grid-column:1 / -1;">暂无产品</div>'}</div>
+                </div>
+                <div class="it-subsection">
+                  <div class="subhead-row">
+                    <h3 class="subhead">项目</h3>
+                    <span class="sub-summary">${projectItems.length}项 · ${formatBudget(projectBudget)}万元</span>
+                  </div>
+                  <div class="it-card-grid projects-grid">${projectItems.length ? projectItems.map(it => renderNode(it, 'itProject', null, null, analysis)).join('') : '<div class="empty" style="grid-column:1 / -1;">暂无项目</div>'}</div>
+                </div>
+              </div>
+            </section>
+          </div>
+        `;
+
+        bindBoardEvents();
+        renderNodeClasses();
+      }
+
+      function renderInitiativeBlock(item, index, analysis) {
+        const expanded = state.expandedInitiatives[item.id] === true;
+        const measures = item.keyMeasures || [];
+        return `
+          <div class="initiative-item">
+            ${renderNode(item, 'initiative', null, formatChineseIndex(index), analysis)}
+            ${expanded ? `
+              <div class="initiative-measures">
+                <div class="initiative-measures-head">
+                  <button class="initiative-measures-toggle" data-action="toggle-measures" data-initiative-id="${item.id}" title="展开或收起关键举措">
+                    <span>▾</span>
+                    <span>关键举措</span>
+                    <span class="initiative-measures-count">${measures.length}</span>
+                  </button>
+                  ${state.isEditMode ? `<button class="mini-icon" data-action="add-measure" data-group-id="${item.id}" title="新增关键举措">＋</button>` : ''}
+                </div>
+                <div class="initiative-measures-list">${measures.length ? measures.map(measure => renderNode(measure, 'keyMeasure', item.id, null, analysis)).join('') : '<div class="empty">暂无关键举措</div>'}</div>
+              </div>` : ''}
+          </div>`;
+      }
+
+      function renderNode(item, type, groupId, index, analysis) {
+        let statusLabel = '', statusClass = 'status-slate';
+        let showStatusTag = false;
+        if (type === 'initiative' || type === 'keyMeasure') {
+          showStatusTag = item.status === 'new';
+          statusLabel = '新增';
+          statusClass = 'status-green';
+        } else if (type === 'capability' || type === 'valueStream') {
+          showStatusTag = item.status === 'new';
+          statusLabel = '新增';
+          statusClass = 'status-green';
+        } else {
+          showStatusTag = item.status === 'new';
+          statusLabel = '新增';
+          statusClass = 'status-indigo';
+        }
+
+        let warning = '';
+        if (type === 'itProject' && analysis.itOrphans.has(item.id)) warning = '<span class="warn-icon red" title="无重点工作支撑，可能为孤立投资">⚠</span>';
+        if (type === 'capability' && analysis.capabilityGaps.has(item.id)) warning = '<span class="warn-icon orange" title="支撑了重点工作，但缺乏IT项目落地">⚠</span>';
+
+        const desc = (type === 'initiative' || type === 'keyMeasure') && item.description ? `<div class="node-subtitle">${escapeHtml(item.description)}</div>` : '';
+        const budgetRatio = type === 'itProject' ? getBudgetRatio(item) : null;
+        const budgetText = type === 'itProject'
+          ? `<div class="node-subtitle">预算：${formatBudget(item.budget)} 万元 · 占比：${formatPercent(budgetRatio)}</div>`
+          : '';
+        const anchors = state.isEditMode && type !== 'initiative' ? ALL_ANCHORS.map(side => `<button class="anchor anchor-${side} ${state.dragLink?.sourceId===item.id&&state.dragLink?.sourceAnchor===side?'source-anchor':''} ${state.dragLink?.targetId===item.id&&state.dragLink?.targetAnchor===side?'active-target':''}" data-anchor-side="${side}" data-node-anchor-id="${item.id}" title="${side}"></button>`).join('') : '';
+        const statusTag = showStatusTag ? `<span class="status-pill ${statusClass}">${statusLabel}</span>` : '';
+        const hoverDetail = type === 'capability'
+          ? (item.gapDescription || '').trim()
+          : type === 'itProject'
+            ? (item.featurePlan || '').trim()
+            : '';
+        const hoverLabel = type === 'capability' ? '差距描述' : '特性规划';
+        const hoverTitleAttr = (!state.isEditMode && hoverDetail)
+          ? `title="${escapeAttr(`${hoverLabel}：${hoverDetail}`)}"`
+          : '';
+        const nodeClass = type === 'initiative'
+          ? 'initiative-node'
+          : type === 'keyMeasure'
+            ? 'measure-node'
+            : type === 'valueStream'
+              ? 'value-stream-node'
+              : type === 'capability'
+                ? 'capability-node'
+                : 'it-node';
+
+        return `
+          <div class="node ${nodeClass}"
+               id="node-${item.id}"
+               data-node-id="${item.id}"
+               data-node-type="${type}"
+               data-group-id="${groupId || ''}"
+               ${hoverTitleAttr}>
+            ${anchors}
+            <div class="node-top">
+              <div class="node-main">
+                <div class="node-title-row">
+                  ${type === 'initiative' ? `<span class="seq-tag">${index}</span>` : ''}
+                  <div class="node-title">${escapeHtml(item.title)}</div>
+                </div>
+                ${desc}
+                ${budgetText}
+              </div>
+              <div class="meta-row">
+                ${statusTag}
+                ${warning}
+                ${state.isEditMode ? `
+                  <div class="node-footer">
+                    <button class="mini-icon" data-action="edit-node" data-node-type="${type}" data-node-id="${item.id}" data-group-id="${groupId || ''}" title="编辑">✎</button>
+                    <button class="mini-icon danger" data-action="delete-node" data-node-type="${type}" data-node-id="${item.id}" data-group-id="${groupId || ''}" title="删除">🗑</button>
+                  </div>` : ''}
+              </div>
+            </div>
+          </div>`;
+      }
+
+      function bindBoardEvents() {
+        els.board.querySelectorAll('[data-group-toggle]').forEach(el => {
+          el.addEventListener('click', (e) => {
+            if (e.target.closest('[data-action]')) return;
+            toggleGroup(el.getAttribute('data-group-toggle'));
+          });
+        });
+
+        els.board.querySelectorAll('[data-action="toggle-measures"]').forEach(el => {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleInitiativeMeasures(el.getAttribute('data-initiative-id'));
+          });
+        });
+
+        els.board.querySelectorAll('[data-node-id]').forEach(node => {
+          const nodeId = node.getAttribute('data-node-id');
+          node.addEventListener('mouseenter', () => {
+            state.hoveredNode = nodeId;
+            renderNodeClasses();
+            renderLines();
+            renderInteractionLayer();
+          });
+          node.addEventListener('mouseleave', () => {
+            if (state.hoveredNode === nodeId && !state.dragLink) state.hoveredNode = null;
+            renderNodeClasses();
+            renderLines();
+            renderInteractionLayer();
+          });
+          node.addEventListener('click', (e) => {
+            if (e.target.closest('[data-action]') || e.target.closest('[data-anchor-side]')) return;
+            handleNodeClick(nodeId, node.getAttribute('data-node-type'));
+          });
+        });
+
+        els.board.querySelectorAll('[data-anchor-side]').forEach(anchor => {
+          anchor.addEventListener('pointerdown', (e) => {
+            startAnchorDrag(anchor.getAttribute('data-node-anchor-id'), anchor.getAttribute('data-anchor-side'), e);
+          });
+          anchor.addEventListener('mouseenter', () => {
+            const nodeId = anchor.getAttribute('data-node-anchor-id');
+            state.hoveredNode = nodeId;
+            renderNodeClasses();
+          });
+        });
+
+        els.board.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const action = btn.getAttribute('data-action');
+            const groupId = btn.getAttribute('data-group-id');
+            const nodeId = btn.getAttribute('data-node-id');
+            const nodeType = btn.getAttribute('data-node-type');
+            if (action === 'add-initiative') openModal('initiative');
+            if (action === 'add-measure') openModal('keyMeasure', null, groupId);
+            if (action === 'add-value-stream') openModal('valueStream');
+            if (action === 'add-group') openModal('capabilityGroup');
+            if (action === 'add-capability') openModal('capability', null, groupId);
+            if (action === 'add-it') openModal('itProject');
+            if (action === 'edit-group') {
+              const group = state.data.capabilityGroups.find(g => g.id === groupId);
+              openModal('capabilityGroup', group);
+            }
+            if (action === 'delete-group') deleteItem('capabilityGroup', groupId);
+            if (action === 'edit-node') {
+              const item = findItem(nodeType, nodeId, groupId);
+              openModal(nodeType, item, groupId || null);
+            }
+            if (action === 'delete-node') deleteItem(nodeType, nodeId, groupId || null);
+          });
+        });
+      }
+
+      function findItem(type, id, groupId) {
+        if (type === 'initiative') return state.data.initiatives.find(i => i.id === id);
+        if (type === 'keyMeasure') return state.data.initiatives.find(i => i.id === groupId)?.keyMeasures.find(m => m.id === id);
+        if (type === 'valueStream') return state.data.valueStreams.find(v => v.id === id);
+        if (type === 'capability') return state.data.capabilityGroups.find(g => g.id === groupId)?.capabilities.find(c => c.id === id);
+        if (type === 'itProject') return state.data.itProjects.find(it => it.id === id);
+        return null;
+      }
+
+      function render() {
+        els.editBanner.style.display = state.isEditMode ? 'flex' : 'none';
+        els.editModeBtn.classList.toggle('active', state.isEditMode);
+        els.editModeBtn.querySelector('span').textContent = state.isEditMode ? '退出编辑' : '进入编辑';
+        renderBoard();
+        renderLines();
+        renderInteractionLayer();
+        renderLinkStatus();
+        requestAnimationFrame(updatePositions);
+      }
+
+      els.editModeBtn.addEventListener('click', toggleEditMode);
+      els.exportBtn.addEventListener('click', exportData);
+      els.importBtn.addEventListener('click', () => els.importInput.click());
+      els.importInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) importData(file);
+        e.target.value = '';
+      });
+      els.closeModalBtn.addEventListener('click', closeModal);
+      els.cancelModalBtn.addEventListener('click', closeModal);
+      els.modalBackdrop.addEventListener('click', (e) => {
+        if (e.target === els.modalBackdrop) closeModal();
+      });
+      els.canvasWrap.addEventListener('scroll', () => {
+        renderLines();
+        renderInteractionLayer();
+      });
+      window.addEventListener('resize', () => {
+        renderLines();
+        renderInteractionLayer();
+      });
+      document.addEventListener('click', (e) => {
+        if (!state.isEditMode) return;
+        if (!e.target.closest('[data-node-id]') && !e.target.closest('[data-link-id]')) {
+          state.linkingSource = null;
+          if (!state.dragLink) render();
+        }
+      });
+
+      els.assistantFab.addEventListener('click', () => openAssistant());
+      els.assistantCloseBtn.addEventListener('click', closeAssistant);
+      els.assistantBackdrop.addEventListener('click', closeAssistant);
+      els.assistantSettingsBtn.addEventListener('click', () => openAssistantSettings());
+      els.assistantSettingsCloseBtn.addEventListener('click', closeAssistantSettings);
+      els.assistantSettingsBackdrop.addEventListener('click', closeAssistantSettings);
+      els.assistantSendBtn.addEventListener('click', sendAssistantMessage);
+      els.assistantChatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          sendAssistantMessage();
+        }
+      });
+      els.assistantTabs.querySelectorAll('[data-assistant-tab]').forEach(tabBtn => {
+        tabBtn.addEventListener('click', () => {
+          state.assistant.activeTab = tabBtn.getAttribute('data-assistant-tab') || 'api';
+          renderAssistant();
+        });
+      });
+      els.saveApiConfigBtn.addEventListener('click', () => {
+        state.assistant.config = {
+          provider: els.aiProviderInput.value.trim(),
+          baseUrl: els.aiBaseUrlInput.value.trim(),
+          apiKey: els.aiApiKeyInput.value.trim(),
+          model: els.aiModelInput.value.trim(),
+          temperature: Number.isFinite(Number(els.aiTempInput.value)) ? Number(els.aiTempInput.value) : 0.2,
+        };
+        saveAssistantState();
+        alert('API配置已保存');
+      });
+      els.newPromptBtn.addEventListener('click', () => {
+        const prompt = { id: generateId(), title: '新Prompt', content: '' };
+        state.assistant.prompts.unshift(prompt);
+        state.assistant.activePromptId = prompt.id;
+        saveAssistantState();
+        renderAssistant();
+      });
+      els.savePromptBtn.addEventListener('click', () => {
+        const activePrompt = getActivePrompt();
+        if (!activePrompt) return;
+        const title = els.promptTitleInput.value.trim();
+        if (!title) {
+          alert('Prompt名称不能为空');
+          return;
+        }
+        activePrompt.title = title;
+        activePrompt.content = els.promptContentInput.value;
+        saveAssistantState();
+        renderAssistant();
+      });
+      els.deletePromptBtn.addEventListener('click', () => {
+        if (!state.assistant.activePromptId) return;
+        if (!confirm('确定删除当前Prompt吗？')) return;
+        state.assistant.prompts = state.assistant.prompts.filter(p => p.id !== state.assistant.activePromptId);
+        if (!state.assistant.prompts.length) {
+          const seed = defaultPrompt();
+          state.assistant.prompts = [seed];
+          state.assistant.activePromptId = seed.id;
+        } else {
+          state.assistant.activePromptId = state.assistant.prompts[0].id;
+        }
+        saveAssistantState();
+        renderAssistant();
+      });
+      els.pickOntologyBtn.addEventListener('click', () => els.ontologyInput.click());
+      els.ontologyInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(String(reader.result || '{}'));
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+              alert('本体JSON格式错误，应为对象结构');
+              return;
+            }
+            state.assistant.ontology = parsed;
+            state.assistant.ontologyFileName = file.name;
+            saveAssistantState();
+            renderAssistant();
+          } catch (error) {
+            alert('JSON解析失败');
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+      });
+      els.clearOntologyBtn.addEventListener('click', () => {
+        state.assistant.ontology = null;
+        state.assistant.ontologyFileName = '';
+        saveAssistantState();
+        renderAssistant();
+      });
+
+      state.expandedGroups = buildExpandedGroups(state.data.capabilityGroups);
+      state.expandedInitiatives = buildExpandedInitiatives(state.data.initiatives);
+      loadAssistantState();
+      renderAssistant();
+      render();
+    })();
+  </script>
+</body>
+</html>
